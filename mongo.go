@@ -2,44 +2,72 @@ package main
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
-	"log"
-	"os"
 
-	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-func mongoStart() {
-	uri := os.Getenv("MONGODB_URI")
-	if uri == "" {
-		log.Fatal("You must set your 'MONGODB_URI' environment variable. See\n\t https://www.mongodb.com/docs/drivers/go/current/usage-examples/#environment-variable")
+func mongoConnect(ctx context.Context, uri string) (*mongo.Client, error) {
+	return mongo.Connect(ctx, options.Client().ApplyURI(uri))
+	// coll := client.Database("sample_mflix").Collection("movies")
+	// title := "Back to the Future"
+	// var result bson.M
+	// err = coll.FindOne(ctx, bson.D{{"title", title}}).Decode(&result)
+	// if err == mongo.ErrNoDocuments {
+	// 	fmt.Printf("No document was found with the title %s\n", title)
+	// 	return
+	// }
+	// if err != nil {
+	// 	panic(err)
+	// }
+	// jsonData, err := json.MarshalIndent(result, "", "    ")
+	// if err != nil {
+	// 	panic(err)
+	// }
+	// fmt.Printf("%s\n", jsonData)
+}
+
+func insertCustomer(ctx context.Context, client *mongo.Client, customer Customer) error {
+	coll := client.Database("crebito").Collection("customers")
+	_, err := coll.InsertOne(ctx, customer)
+	return err
+}
+
+func populateCustomers(ctx context.Context, client *mongo.Client) error {
+	if err := insertCustomer(ctx, client, Customer{
+		ID:      1,
+		Limit:   100000,
+		Balance: 0,
+	}); err != nil {
+		return err
 	}
-	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(uri))
-	if err != nil {
-		panic(err)
+	if err := insertCustomer(ctx, client, Customer{
+		ID:      2,
+		Limit:   80000,
+		Balance: 0,
+	}); err != nil {
+		return err
 	}
-	defer func() {
-		if err := client.Disconnect(context.TODO()); err != nil {
-			panic(err)
-		}
-	}()
-	coll := client.Database("sample_mflix").Collection("movies")
-	title := "Back to the Future"
-	var result bson.M
-	err = coll.FindOne(context.TODO(), bson.D{{"title", title}}).Decode(&result)
-	if err == mongo.ErrNoDocuments {
-		fmt.Printf("No document was found with the title %s\n", title)
-		return
+	if err := insertCustomer(ctx, client, Customer{
+		ID:      3,
+		Limit:   1000000,
+		Balance: 0,
+	}); err != nil {
+		return err
 	}
-	if err != nil {
-		panic(err)
+	if err := insertCustomer(ctx, client, Customer{
+		ID:      4,
+		Limit:   10000000,
+		Balance: 0,
+	}); err != nil {
+		return err
 	}
-	jsonData, err := json.MarshalIndent(result, "", "    ")
-	if err != nil {
-		panic(err)
+	if err := insertCustomer(ctx, client, Customer{
+		ID:      5,
+		Limit:   500000,
+		Balance: 0,
+	}); err != nil {
+		return err
 	}
-	fmt.Printf("%s\n", jsonData)
+	return nil
 }
